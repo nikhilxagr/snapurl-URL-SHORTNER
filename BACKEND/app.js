@@ -36,7 +36,16 @@ app.post("/api/create", async (req, res) => {
   }
 });
 
+app.get("/api/:shortUrl", async (req, res) => {
+    const { shortUrl } = req.params;
+    const urlEntry = await urlSchema.findOne({ short_Url: shortUrl });
 
+    if (urlEntry) { 
+      return res.redirect(urlEntry.full_Url);
+    } else {
+      return res.status(404).json({ error: "Short URL not found" });
+    }
+});
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
