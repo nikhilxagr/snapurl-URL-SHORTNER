@@ -3,6 +3,9 @@ import { nanoid } from "nanoid";
 import dotenv from "dotenv";
 import connectDB from "./src/config/mongodb.config.js";
 import urlSchema from "./src/models/shorturl.model.js";
+import short_Url from "./src/routes/shortUrl.routes.js";
+import { errorHandler } from "./src/utils/errorHandler.js";
+import { redirectFromShortUrl } from "./src/controllers/shortUrl.controller.js";
 
 dotenv.config("./.env");
 
@@ -11,41 +14,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize DB connection
 connectDB();
 
-app.post("/api/create", async (req, res) => {
-  try {
-    const { url } = req.body;
+app.use("/api/create", short_Url);
+app.get("/:id", redirectFromShortUrl);
+app.use(errorHandler);
 
-    // Validate if url is provided
-    if (!url) {
-      return res.status(400).json({ error: "URL is required" });
-    }
-
-    const shortUrl = nanoid(7);
-    const newUrl = new urlSchema({
-      full_Url: url,
-      short_Url: shortUrl,
-    });
-    await newUrl.save();
-    res.status(201).json({ shortUrl });
-  } catch (error) {
-    console.error("Error creating short URL:", error.message);
-    res.status(500).json({ error: "Failed to create short URL" });
-  }
-});
-
-app.get("/api/:shortUrl", async (req, res) => {
-    const { shortUrl } = req.params;
-    const urlEntry = await urlSchema.findOne({ short_Url: shortUrl });
-
-    if (urlEntry) { 
-      return res.redirect(urlEntry.full_Url);
-    } else {
-      return res.status(404).json({ error: "Short URL not found" });
-    }
-});
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
