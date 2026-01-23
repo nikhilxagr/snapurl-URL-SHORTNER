@@ -6,14 +6,14 @@ import urlSchema from "./src/models/shorturl.model.js";
 import short_Url from "./src/routes/shortUrl.routes.js";
 import { errorHandler } from "./src/utils/errorHandler.js";
 import { redirectFromShortUrl } from "./src/controllers/shortUrl.controller.js";
-
+import cors from "cors";
 dotenv.config("./.env");
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 connectDB();
 
 app.use("/api/create", short_Url);
