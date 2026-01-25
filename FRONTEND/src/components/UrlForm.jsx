@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { createShortUrl } from '../api/shortUrl.api'
+import { useSelector } from 'react-redux'
 import { QueryClient } from '@tanstack/react-query'
 import { queryClient } from '../main'
 
@@ -9,6 +10,8 @@ const UrlForm = () => {
   const [shortUrl, setShortUrl] = useState()
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState(null)
+  const [customSlug, setCustomSlug] = useState("")
+  const {isAuthenticated} = useSelector((state) => state.auth)
 
   const handleSubmit = async () => {
     try{
@@ -58,19 +61,31 @@ const UrlForm = () => {
             {error}
           </div>
         )}
-        {shortUrl && (
+        {isAuthenticated && (
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Shortened URL
+            <label htmlFor="customSlug" className="block text-sm font-medium text-gray-700 mb-1">
+              Custom URL (optional)
             </label>
-            <div className="flex">
+            <input
+              type="text"
+              id="customSlug"
+              value={customSlug}
+              onChange={(event) => setCustomSlug(event.target.value)}
+              placeholder="Enter custom slug"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+        {shortUrl && (
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-2">Your shortened URL:</h2>
+            <div className="flex items-center">
               <input
                 type="text"
-                value={shortUrl}
                 readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />  
-  
+                value={shortUrl}
+                className="flex-1 p-2 border border-gray-300 rounded-l-md bg-gray-50"
+              />
                <button
                 onClick={handleCopy}
                 className={`px-4 py-2 rounded-r-md transition-colors duration-200 ${
