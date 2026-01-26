@@ -1,8 +1,8 @@
 import express from "express";
 import { nanoid } from "nanoid";
 import dotenv from "dotenv";
-import connectDB from "./src/config/monogo.config.js";
-import short_url from "./src/routes/short_url.route.js";
+import connectDB from "./src/config/mongo.config.js";
+import shortUrlRoutes from "./src/routes/short_url.route.js";
 import user_routes from "./src/routes/user.routes.js";
 import auth_routes from "./src/routes/auth.routes.js";
 import { redirectFromShortUrl } from "./src/controller/short_url.controller.js";
@@ -10,7 +10,6 @@ import { errorHandler } from "./src/utils/errorHandler.js";
 import cors from "cors";
 import { attachUser } from "./src/utils/attachUser.js";
 import cookieParser from "cookie-parser";
-
 
 dotenv.config("./.env");
 
@@ -29,7 +28,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 connectDB();
 
-app.use("/api/create", short_url);
+// Mount the routes - use only ONE prefix
+app.use("/api/short_url", shortUrlRoutes);
+
 app.use("/api/users", user_routes);
 app.use("/api/auth", auth_routes);
 app.get("/:id", redirectFromShortUrl);
