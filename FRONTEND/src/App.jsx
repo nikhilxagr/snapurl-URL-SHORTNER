@@ -11,16 +11,25 @@ const App = () => {
 
     setLoading(true);
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch("/api/shorten", {
+      // Update with your backend server URL
+      const response = await fetch("http://localhost:5000/api/shorten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ longUrl }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
-      setShortUrl(data.shortUrl);
+      // Construct full shortened URL
+      setShortUrl(`http://localhost:5000/${data.shortUrl || data.shortCode}`);
     } catch (error) {
       console.error("Error:", error);
+      alert(
+        "Failed to shorten URL. Please check if the backend server is running.",
+      );
     } finally {
       setLoading(false);
     }
