@@ -1,101 +1,102 @@
 import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "./context/AuthContext";
+import PrivateRoute from "./components/PrivateRoute";
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Analytics from "./pages/Analytics";
+import MyLinks from "./pages/MyLinks";
+import LinkDetails from "./pages/LinkDetails";
+import NotFound from "./pages/NotFound";
 
-const App = () => {
-  const [longUrl, setLongUrl] = useState("");
-  const [shortUrl, setShortUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleShorten = async (e) => {
-    e.preventDefault();
-    if (!longUrl) return;
-
-    setLoading(true);
-    try {
-      // Update with your backend server URL
-      const response = await fetch("http://localhost:5000/api/shorten", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ longUrl }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      // Construct full shortened URL
-      setShortUrl(`http://localhost:5000/${data.shortUrl || data.shortCode}`);
-    } catch (error) {
-      console.error("Error:", error);
-      alert(
-        "Failed to shorten URL. Please check if the backend server is running.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shortUrl);
-    alert("Copied to clipboard!");
-  };
-
+function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-gray-800 mb-2">
-          snapURL
-        </h1>
-        <p className="text-center text-gray-600 mb-8">
-          Shorten your long URLs instantly
-        </p>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen app-shell">
+          <Navbar />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: "#363636",
+                color: "#fff",
+              },
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: "#10b981",
+                  secondary: "#fff",
+                },
+              },
+              error: {
+                duration: 4000,
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#fff",
+                },
+              },
+            }}
+          />
 
-        <form onSubmit={handleShorten} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Enter Long URL
-            </label>
-            <input
-              type="url"
-              value={longUrl}
-              onChange={(e) => setLongUrl(e.target.value)}
-              placeholder="https://example.com/very/long/url"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              required
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
             />
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg transition disabled:opacity-50"
-          >
-            {loading ? "Shortening..." : "Shorten URL"}
-          </button>
-        </form>
+            <Route
+              path="/my-links"
+              element={
+                <PrivateRoute>
+                  <MyLinks />
+                </PrivateRoute>
+              }
+            />
 
-        {shortUrl && (
-          <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">Your Short URL:</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={shortUrl}
-                readOnly
-                className="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none"
-              />
-              <button
-                onClick={copyToClipboard}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition"
-              >
-                Copy
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            <Route
+              path="/analytics"
+              element={
+                <PrivateRoute>
+                  <Analytics />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/link/:id"
+              element={
+                <PrivateRoute>
+                  <LinkDetails />
+                </PrivateRoute>
+              }
+            />
+
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
-};
+}
 
 export default App;
