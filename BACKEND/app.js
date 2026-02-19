@@ -38,24 +38,34 @@ app.use(
   }),
 );
 
+const normalizeOrigin = (value = "") =>
+  value.trim().replace(/\/+$/, "").toLowerCase();
+
 const allowedOrigins = (
   process.env.FRONTEND_URLS ||
   process.env.FRONTEND_URL ||
-  "http://localhost:5173"
+  "http://localhost:5173,https://snapurl-url-shortner.vercel.app"
 )
   .split(",")
-  .map((s) => s.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      return cb(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalizedOrigin)) return cb(null, true);
+
+    return cb(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(morgan("dev"));
 
