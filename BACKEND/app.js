@@ -79,6 +79,27 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 const isDatabaseReady = () => mongoose.connection.readyState === 1;
 
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "snapURL backend is running",
+    endpoints: {
+      health: "/api/health",
+      auth: "/api/auth",
+      shortUrl: "/api/short_url",
+      analytics: "/api/analytics",
+    },
+  });
+});
+
+app.get("/api", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "snapURL API base route",
+    health: "/api/health",
+  });
+});
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "success",
