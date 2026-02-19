@@ -119,7 +119,7 @@ app.use(errorHandler);
 
 let isConnectingDatabase = false;
 
-const connectDatabaseWithRetry = async () => {
+export const connectDatabaseWithRetry = async () => {
   if (isDatabaseReady() || isConnectingDatabase) return;
 
   if (!process.env.MONGODB_URI) {
@@ -149,7 +149,7 @@ mongoose.connection.on("disconnected", () => {
   }
 });
 
-const startServer = () => {
+export const startServer = () => {
   const PORT = process.env.PORT || 3000;
 
   app.listen(PORT, () => {
@@ -160,6 +160,8 @@ const startServer = () => {
   connectDatabaseWithRetry();
 };
 
-startServer();
+if (process.env.VERCEL !== "1") {
+  startServer();
+}
 
 export default app;

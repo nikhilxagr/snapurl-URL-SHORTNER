@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     try {
       const response = await api.get("/auth/me");
-      setUser(response.data.data.user);
+      setUser(response.data?.user || null);
     } catch (error) {
       setUser(null);
     } finally {
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post("/auth/login", { email, password });
-    setUser(response.data.data.user);
+    setUser(response.data?.user || null);
     return response.data;
   };
 
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
     });
-    setUser(response.data.data.user);
+    setUser(response.data?.user || null);
     return response.data;
   };
 
