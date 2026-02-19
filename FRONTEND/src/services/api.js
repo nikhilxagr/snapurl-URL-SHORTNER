@@ -6,6 +6,22 @@ const baseURL = trimmedApiBase.endsWith("/api")
   ? trimmedApiBase
   : `${trimmedApiBase}/api`;
 
+export const AUTH_TOKEN_KEY = "snapurl_access_token";
+
+export const getStoredAuthToken = () => {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(AUTH_TOKEN_KEY) || "";
+};
+
+export const setStoredAuthToken = (token) => {
+  if (typeof window === "undefined") return;
+  if (!token) {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    return;
+  }
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+};
+
 const api = axios.create({
   baseURL,
   withCredentials: true,
@@ -29,6 +45,11 @@ const isAuthPage = () => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    const token = getStoredAuthToken();
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -43,6 +64,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
+      setStoredAuthToken("");
       const requestUrl = error.config?.url || "";
 
       // Avoid redirect loops for auth probe endpoints.

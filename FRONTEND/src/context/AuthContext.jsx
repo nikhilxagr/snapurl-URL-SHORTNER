@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import api from "../services/api";
+import api, { setStoredAuthToken } from "../services/api";
 
 const AuthContext = createContext();
 
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.get("/auth/me");
       setUser(response.data?.user || null);
     } catch (error) {
+      setStoredAuthToken("");
       setUser(null);
     } finally {
       setLoading(false);
@@ -32,6 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post("/auth/login", { email, password });
+    setStoredAuthToken(response.data?.token || "");
     setUser(response.data?.user || null);
     return response.data;
   };
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }) => {
       email,
       password,
     });
+    setStoredAuthToken(response.data?.token || "");
     setUser(response.data?.user || null);
     return response.data;
   };
@@ -52,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      setStoredAuthToken("");
       setUser(null);
     }
   };
