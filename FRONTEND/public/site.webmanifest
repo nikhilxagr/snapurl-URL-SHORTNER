@@ -1,0 +1,15 @@
+{
+  "name": "snapURL",
+  "short_name": "snapURL",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcf8ef",
+  "theme_color": "#0f8f84",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

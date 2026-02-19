@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /my-links
+Disallow: /link/
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://snapurl-url-shortner.vercel.app/sitemap.xml
