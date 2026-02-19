@@ -6,7 +6,7 @@ import {
   updateUrl,
   deleteUrl,
   getUrlStats,
-} from "../controller/short_url.controller.js";
+} from "../controller/short_Url.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();

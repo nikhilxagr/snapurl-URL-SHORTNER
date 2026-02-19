@@ -1,265 +1,191 @@
-<div align="center">
+# snapURL - URL Shortener
 
-![Header](https://capsule-render.vercel.app/api?type=waving&color=0:667eea,50:764ba2,100:4ECDC4&height=200&section=header&text=snapURL&fontSize=70&fontColor=fff&animation=fadeIn&fontAlignY=25&desc=Your%20Ultimate%20URL%20Shortening%20Solution&descAlignY=55&descSize=20)
+Full-stack URL shortener built with React, Express, and MongoDB.
 
-<img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Link.png" alt="Link" width="120"/>
+- Live App: https://snapurl-url-shortner.vercel.app/
+- Frontend Folder: `FRONTEND/`
+- Backend Folder: `BACKEND/`
 
-### 🔗 Shorten Your Links Instantly | Fast • Secure • Reliable
+## Features
 
-</div>
+- Create short URLs from long links
+- Optional custom alias, password, and expiration
+- Authentication with cookie-based sessions
+- Dashboard analytics (total links, clicks, top links, recent links, traffic trend)
+- Link management (list, details, stats, delete)
+- Redirect support via short code route
 
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=32&duration=2800&pause=2000&color=6366F1&center=true&vCenter=true&width=600&lines=snapURL+🔗;Shorten+Your+Links+Instantly!;Fast+•+Secure+•+Reliable" alt="Typing SVG" />
-</div>
+## Tech Stack
 
-<div align="center">
-  <h1>⚡ snapURL ⚡</h1>
-  <p><strong>Your Ultimate URL Shortening Solution</strong></p>
-</div>
+- Frontend: React, Vite, React Router, Tailwind CSS, Axios
+- Backend: Node.js, Express, Mongoose, JWT, Cookie Parser, Helmet, Morgan
+- Database: MongoDB Atlas
+- Deployment: Vercel and Render compatible
 
----
+## Project Structure
 
-## 📖 About The Project
+```text
+03 snapURL - URL-SHORTNER/
+  BACKEND/
+    app.js
+    api/index.js
+    vercel.json
+    src/
+  FRONTEND/
+    src/
+    public/
+    vercel.json
+  vercel.json
+```
 
-**snapURL** is a powerful, full-stack URL shortener application designed with modern web technologies. Transform your long, unwieldy URLs into clean, shareable short links in seconds! Perfect for social media, marketing campaigns, and keeping your links tidy.
+## Local Development
 
-### ✨ Key Features
+### 1) Backend Setup
 
-🔗 **Quick URL Shortening** - Convert long URLs into short, memorable links instantly  
-📊 **Analytics Dashboard** - Track clicks, views, and link performance  
-🎯 **Custom Short URLs** - Create personalized short links for your brand  
-⚡ **Lightning Fast** - Optimized for speed and performance  
-🔒 **Secure Redirects** - Safe and reliable link management  
-📱 **Responsive Design** - Works seamlessly on all devices  
-🎨 **Modern UI/UX** - Clean, intuitive user interface  
-💾 **Persistent Storage** - MongoDB-powered data persistence
+```bash
+cd BACKEND
+npm install
+```
 
----
+Create `BACKEND/.env`:
 
-## 🛠️ Built With
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+APP_URL=http://localhost:3000
+FRONTEND_URL=http://localhost:5173
+ALLOW_MEMORY_DB_FALLBACK=true
+```
 
-<div align="center">
+Run backend:
 
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
-![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+```bash
+npm run dev
+```
 
-</div>
+Backend default URL: `http://localhost:3000`
 
----
+### 2) Frontend Setup
 
-## 🚀 Getting Started
+```bash
+cd FRONTEND
+npm install
+```
 
-### Prerequisites
+Create `FRONTEND/.env`:
 
-Before you begin, ensure you have the following installed:
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_APP_URL=http://localhost:3000
+```
 
-- 📦 Node.js (v14 or higher)
-- 🍃 MongoDB (local or cloud instance)
-- 📝 npm or yarn package manager
+Run frontend:
 
-### Installation
+```bash
+npm run dev
+```
 
-1. **Clone the repository**
+Frontend default URL: `http://localhost:5173`
 
-   ```bash
-   git clone https://github.com/nikhilxagr/snapURL-URL-Shortner.git
-   cd snapURL-URL-Shortner
-   ```
+## Environment Variables
 
-2. **Install dependencies**
+Backend (`BACKEND/.env`):
 
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
+- `MONGODB_URI` (or `MONGO_URI`)
+- `JWT_SECRET`
+- `APP_URL`
+- `FRONTEND_URL` or `FRONTEND_URLS` (comma-separated origins)
+- `PORT` (optional, defaults to `3000`)
+- `ALLOW_MEMORY_DB_FALLBACK` (optional)
 
-3. **Configure environment variables**
+Frontend (`FRONTEND/.env`):
 
-   ```bash
-   # Create a .env file in the root directory
-   cp .env.example .env
+- `VITE_API_URL`
+- `VITE_APP_URL`
 
-   # Add your MongoDB connection string and other configs
-   MONGODB_URI=your_mongodb_connection_string
-   PORT=3000
-   BASE_URL=http://localhost:3000
-   ```
+## API Overview
 
-4. **Start the development server**
+Base API path: `/api`
 
-   ```bash
-   npm start
-   # or
-   yarn start
-   ```
+Auth:
 
-5. **Open your browser**
-   ```
-   Navigate to http://localhost:3000
-   ```
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me` (protected)
 
----
+Short URLs:
 
-## 💡 Usage
+- `POST /api/short_url/create`
+- `GET /api/short_url/my-urls` (protected)
+- `GET /api/short_url/:id` (protected)
+- `PATCH /api/short_url/:id` (protected)
+- `DELETE /api/short_url/:id` (protected)
+- `GET /api/short_url/:id/stats` (protected)
 
-1. 🌐 **Enter your long URL** in the input field
-2. ✏️ **Customize** your short link (optional)
-3. 🎯 **Click "Shorten"** to generate your snapURL
-4. 📋 **Copy and share** your new short link
-5. 📈 **Track analytics** from your dashboard
+Analytics:
 
----
+- `GET /api/analytics/dashboard` (protected)
 
-## 🎯 Features in Detail
+User:
 
-### 🔗 URL Shortening Engine
+- `POST /api/users/urls` (protected)
 
-- Algorithm-based short code generation
-- Collision prevention and validation
-- Support for custom aliases
+Health:
 
-### 📊 Analytics Dashboard
+- `GET /api/health`
 
-- Real-time click tracking
-- Geographic data visualization
-- Referrer source analysis
-- Time-based statistics
+Redirect:
 
-### 🔐 Security Features
+- `GET /:id`
 
-- URL validation and sanitization
-- Rate limiting protection
-- Malicious link detection
+## Deployment
 
----
+### Vercel
 
-## 📸 Screenshots
+Recommended setup is two Vercel projects:
 
-<div align="center">
+1. Frontend project
+- Root Directory: `FRONTEND`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Uses `FRONTEND/vercel.json` (SPA rewrite)
 
-### Home Page
+2. Backend project
+- Root Directory: `BACKEND`
+- Uses `BACKEND/vercel.json` + `BACKEND/api/index.js`
 
-![Home Page](https://via.placeholder.com/800x400/667eea/ffffff?text=snapURL+Home+Page)
+If you deploy frontend from repo root, this repo also includes root `vercel.json` for that case.
 
-### Dashboard
+### Render
 
-![Dashboard](https://via.placeholder.com/800x400/4ECDC4/ffffff?text=Analytics+Dashboard)
+Use two services:
 
-</div>
+1. Backend Web Service
+- Root Directory: `BACKEND`
+- Build Command: `npm install`
+- Start Command: `node app.js`
+- Health Check Path: `/api/health`
 
----
+2. Frontend Static Site
+- Root Directory: `FRONTEND`
+- Build Command: `npm install && npm run build`
+- Publish Directory: `dist`
+- Rewrite rule: `/* -> /index.html`
 
-## 🗺️ Roadmap
+## Troubleshooting
 
-- [x] Basic URL shortening functionality
-- [x] MongoDB integration
-- [x] React Router implementation
-- [ ] User authentication system
-- [ ] QR code generation
-- [ ] API for developers
-- [ ] Browser extension
-- [ ] Mobile app
+- `404 NOT_FOUND` on Vercel root domain: Ensure project root is correct (`FRONTEND` for frontend project), or use root `vercel.json`.
+- Signup/Login fails on deployed env: Check frontend `VITE_API_URL`, backend CORS origin (`FRONTEND_URL`/`FRONTEND_URLS`), and production cookie settings.
+- `503 Database is unavailable`: Check MongoDB URI and Atlas network access.
 
----
+## Useful Links
 
-## 🤝 Contributing
+- Live App: https://snapurl-url-shortner.vercel.app/
+- Vercel Docs: https://vercel.com/docs
+- Render Docs: https://render.com/docs
+- MongoDB Atlas: https://www.mongodb.com/atlas
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create! Any contributions you make are **greatly appreciated**. ❤️
+## License
 
-1. 🍴 Fork the Project
-2. 🌿 Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. ✍️ Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. 📤 Push to the Branch (`git push origin feature/AmazingFeature`)
-5. 🎉 Open a Pull Request
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-## 👨‍💻 About Me
-
-<div align="center">
-
-### Hi there! I'm Nikhil 👋
-
-I'm a passionate developer who loves building cool stuff! Check out my work and let's connect!
-
-</div>
-
----
-
-## 🌐 Connect With Me
-
-<div align="center">
-
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/nikhilxagr)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/nikhilxagr)
-[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/nikhilxagr)
-[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/nikhilxagr)
-[![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white)](https://nikhilxagr.dev)
-[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:nikhilxagr@gmail.com)
-[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.com/users/nikhilxagr)
-[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@nikhilxagr)
-[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/nikhilxagr)
-
-</div>
-
----
-
-## 💖 Support
-
-If you like this project, please consider giving it a ⭐️! It helps me stay motivated to keep building awesome stuff!
-
-<div align="center">
-
-### Show some ❤️ by starring this repository!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=nikhilxagr/snapURL-URL-Shortner&type=Date)](https://star-history.com/#nikhilxagr/snapURL-URL-Shortner&Date)
-
-</div>
-
----
-
-## 📊 Repository Stats
-
-<div align="center">
-
-![GitHub stars](https://img.shields.io/github/stars/nikhilxagr/snapURL-URL-Shortner?style=social)
-![GitHub forks](https://img.shields.io/github/forks/nikhilxagr/snapURL-URL-Shortner?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/nikhilxagr/snapURL-URL-Shortner?style=social)
-![GitHub issues](https://img.shields.io/github/issues/nikhilxagr/snapURL-URL-Shortner)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/nikhilxagr/snapURL-URL-Shortner)
-![GitHub last commit](https://img.shields.io/github/last-commit/nikhilxagr/snapURL-URL-Shortner)
-![GitHub repo size](https://img.shields.io/github/repo-size/nikhilxagr/snapURL-URL-Shortner)
-
-</div>
-
----
-
-<div align="center">
-
-### 💡 "Short links, Big impact!" 💡
-
-**Made with ❤️ by [Nikhil](https://github.com/nikhilxagr)**
-
-⭐ **Don't forget to star this repo if you found it useful!** ⭐
-
-</div>
-
----
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Travel%20and%20places/Rocket.png" alt="Rocket" width="50" height="50" />
-  <p><strong>Happy Shortening! 🚀</strong></p>
-</div>
+This project is licensed under the MIT License.
