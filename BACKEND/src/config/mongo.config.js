@@ -1,62 +1,86 @@
-import mongoose from "mongoose";
 import dns from "dns";
+import mongoose from "mongoose";
 
-// Set DNS to Google's public DNS to bypass ISP DNS issues
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI;
+let memoryServerInstance = null;
 
-    if (!mongoURI) {
-      throw new Error("MONGODB_URI is not defined in .env file");
-    }
+const maskUri = (uri = "") => uri.replace(/\/\/[^:]+:[^@]+@/, "//***:***@");
 
-    console.log("🔄 Connecting to MongoDB Atlas...");
-    console.log(
-      "📍 Using URI:",
-      mongoURI.replace(/\/\/[^:]+:[^@]+@/, "//***:***@"),
-    ); // Hide credentials
+const connectToUri = async (uri, label) => {
+  console.log(`Connecting to MongoDB (${label})...`);
+  console.log("Using URI:", maskUri(uri));
 
-    const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 10000, // Increase timeout for Atlas
-      socketTimeoutMS: 45000,
-      family: 4, // Use IPv4, skip trying IPv6
-    });
+  const connection = await mongoose.connect(uri, {
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    family: 4,
+  });
 
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    console.log(`📊 Database: ${conn.connection.name}`);
-
-    return conn;
-  } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-
-    if (
-      error.message.includes("querySrv") ||
-      error.message.includes("ECONNREFUSED")
-    ) {
-      console.error("\n⚠️  DNS Resolution Failed!");
-      console.error("📌 Quick fixes:");
-      console.error("   1. Disconnect VPN/Proxy and try again");
-      console.error("   2. Run: ipconfig /flushdns (in cmd as admin)");
-      console.error("   3. Change DNS to 8.8.8.8 in network settings");
-      console.error("   4. Try mobile hotspot to test if ISP is blocking");
-      console.error(
-        "   5. Get standard (non-SRV) connection string from Atlas\n",
-      );
-    }
-
-    throw error;
-  }
+  console.log(`MongoDB connected: ${connection.connection.host}`);
+  console.log(`Database: ${connection.connection.name}`);
+  return connection;
 };
 
-// Handle connection events
+const shouldUseMemoryFallback = () =>
+  process.env.NODE_ENV !== "production" &&
+  process.env.ALLOW_MEMORY_DB_FALLBACK !== "false";
+
+const startMemoryMongo = async () => {
+  const { MongoMemoryServer } = await import("mongodb-memory-server");
+
+  memoryServerInstance = await MongoMemoryServer.create({
+    instance: { dbName: "snapurl-shortner" },
+  });
+
+  const memoryUri = memoryServerInstance.getUri();
+  console.warn(
+    "Atlas unavailable. Falling back to in-memory MongoDB for development.",
+  );
+  return memoryUri;
+};
+
+const connectDB = async () => {
+  const primaryUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+  let lastError = null;
+
+  if (primaryUri) {
+    try {
+      return await connectToUri(primaryUri, "primary");
+    } catch (error) {
+      lastError = error;
+      console.error(`Primary MongoDB connection failed: ${error.message}`);
+    }
+  }
+
+  if (shouldUseMemoryFallback()) {
+    try {
+      const memoryUri = await startMemoryMongo();
+      return await connectToUri(memoryUri, "memory-fallback");
+    } catch (error) {
+      lastError = error;
+      console.error(`In-memory MongoDB fallback failed: ${error.message}`);
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error("No MongoDB URI found. Set MONGODB_URI or MONGO_URI in .env")
+  );
+};
+
 mongoose.connection.on("disconnected", () => {
-  console.log("⚠️  MongoDB disconnected");
+  console.warn("MongoDB disconnected");
 });
 
-mongoose.connection.on("error", (err) => {
-  console.error("❌ MongoDB connection error:", err);
+mongoose.connection.on("error", (error) => {
+  console.error("MongoDB error:", error.message);
+});
+
+process.on("SIGINT", async () => {
+  if (memoryServerInstance) {
+    await memoryServerInstance.stop();
+  }
 });
 
 export default connectDB;

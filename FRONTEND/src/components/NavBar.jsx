@@ -1,152 +1,171 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Link2, LayoutDashboard, LinkIcon, BarChart3, LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Link2,
+  LinkIcon,
+  LogOut,
+  Menu,
+  UserCircle2,
+  X,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
 
-export default function Navbar() {
+function isActivePath(currentPath, targetPath) {
+  if (targetPath === "/my-links") {
+    return currentPath === "/my-links" || currentPath.startsWith("/link/");
+  }
+
+  return currentPath === targetPath;
+}
+
+export default function NavBar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    toast.success('Logged out successfully');
-    navigate('/');
+  useEffect(() => {
+    setShowMobileMenu(false);
+  }, [location.pathname]);
+
+  const navLinks = useMemo(() => {
+    if (!user) return [];
+
+    return [
+      {
+        path: "/dashboard",
+        label: "Dashboard",
+        icon: <LayoutDashboard className="h-4 w-4" />,
+      },
+      {
+        path: "/my-links",
+        label: "My Links",
+        icon: <LinkIcon className="h-4 w-4" />,
+      },
+    ];
+  }, [user]);
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logged out successfully");
+    navigate("/");
   };
 
-  const navLinks = [
-    { path: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { path: '/my-links', label: 'My Links', icon: <LinkIcon className="w-4 h-4" /> },
-    { path: '/analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
-  ];
-
   return (
-    <nav className="bg-white/70 backdrop-blur-md border-b border-[color:var(--border)] sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Link2 className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-emerald-700 to-teal-700 bg-clip-text text-transparent">
-              snapURL
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-[#dcd3c4] bg-[rgba(252,248,239,0.86)] backdrop-blur-xl">
+      <div className="app-page">
+        <div className="flex h-[74px] items-center justify-between gap-3">
+          <Link to="/" className="group inline-flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-[#0f8f84] to-[#0d5f84] text-white shadow-lg transition-transform group-hover:scale-105">
+              <Link2 className="h-5 w-5" />
+            </span>
+            <span>
+              <span className="block text-xl font-extrabold tracking-tight text-slate-900">
+                snapURL
+              </span>
+              <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                Link Intelligence
+              </span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden items-center gap-2 md:flex">
             {user ? (
               <>
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      location.pathname === link.path
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'text-[color:var(--muted)] hover:bg-emerald-50/60'
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                      isActivePath(location.pathname, link.path)
+                        ? "bg-gradient-to-r from-[#0f8f84] to-[#0e6e86] text-white shadow-md"
+                        : "text-slate-700 hover:bg-white"
                     }`}
                   >
                     {link.icon}
                     {link.label}
                   </Link>
                 ))}
-                
-                <div className="flex items-center gap-3 pl-6 border-l border-[color:var(--border)]">
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-[color:var(--ink)]">{user.name}</div>
-                    <div className="text-xs text-[color:var(--muted)]">{user.email}</div>
+
+                <div className="ml-2 flex items-center gap-2 border-l border-[#d7cdbb] pl-3">
+                  <div className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                    <UserCircle2 className="h-4 w-4 text-[#0f8f84]" />
+                    <span className="max-w-28 truncate">{user.name}</span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="btn-ghost inline-flex items-center gap-2 px-3 py-2 text-sm"
                     title="Logout"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="h-4 w-4" />
+                    Logout
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex items-center gap-3">
-                <Link
-                  to="/login"
-                  className="px-6 py-2 text-[color:var(--ink)] hover:text-emerald-700 font-medium transition-colors"
-                >
+              <>
+                <Link to="/login" className="btn-ghost text-sm">
                   Sign In
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium hover:from-emerald-700 hover:to-teal-700 transition-all"
-                >
-                  Get Started
+                <Link to="/register" className="btn-primary text-sm">
+                  Create Account
                 </Link>
-              </div>
+              </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="md:hidden p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+            onClick={() => setShowMobileMenu((prev) => !prev)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#d4c9b5] bg-white text-slate-700 md:hidden"
+            aria-label="Toggle navigation"
           >
-            {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {showMobileMenu && (
-          <div className="md:hidden py-4 border-t border-[color:var(--border)]">
+          <div className="mb-3 rounded-2xl border border-[#d8cfbf] bg-[rgba(255,255,255,0.9)] p-3 md:hidden">
             {user ? (
               <>
-                <div className="px-4 py-3 bg-white/70 rounded-lg mb-3 border border-[color:var(--border)]">
-                  <div className="font-medium text-[color:var(--ink)]">{user.name}</div>
-                  <div className="text-sm text-[color:var(--muted)]">{user.email}</div>
+                <div className="mb-3 flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-700">
+                  <UserCircle2 className="h-5 w-5 text-[#0f8f84]" />
+                  <span className="truncate">{user.name}</span>
                 </div>
-                
+
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
-                    onClick={() => setShowMobileMenu(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors mb-1 ${
-                      location.pathname === link.path
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'text-[color:var(--muted)] hover:bg-emerald-50/60'
+                    className={`mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
+                      isActivePath(location.pathname, link.path)
+                        ? "bg-gradient-to-r from-[#0f8f84] to-[#0e6e86] text-white"
+                        : "bg-white text-slate-700"
                     }`}
                   >
                     {link.icon}
                     {link.label}
                   </Link>
                 ))}
-                
+
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-2"
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-[#d9d2c4] bg-white px-3 py-2 text-sm font-semibold text-slate-700"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </button>
               </>
             ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="block px-4 py-3 text-[color:var(--ink)] hover:bg-emerald-50 rounded-lg transition-colors mb-2"
-                >
+              <div className="grid gap-2">
+                <Link to="/login" className="btn-ghost text-center text-sm">
                   Sign In
                 </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setShowMobileMenu(false)}
-                  className="block px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg font-medium text-center"
-                >
-                  Get Started
+                <Link to="/register" className="btn-primary text-center text-sm">
+                  Create Account
                 </Link>
-              </>
+              </div>
             )}
           </div>
         )}

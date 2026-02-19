@@ -1,229 +1,195 @@
-import { useState } from 'react';
-import { Link2, Sparkles, Settings, ChevronDown, Lock, Calendar, Hash } from 'lucide-react';
-import toast from 'react-hot-toast';
-import api from '../services/api';
+import { useState } from "react";
+import {
+  Calendar,
+  ChevronDown,
+  Link2,
+  Lock,
+  Settings2,
+  Sparkles,
+  Type,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import api from "../services/api";
 
 export default function CreateUrlForm({ onSuccess }) {
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const [advancedOptions, setAdvancedOptions] = useState({
-    customAlias: '',
-    title: '',
-    description: '',
-    password: '',
-    expiresIn: '',
-    maxClicks: '',
-    tags: ''
+  const [options, setOptions] = useState({
+    customAlias: "",
+    password: "",
+    expiresIn: "",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!url.trim()) {
-      toast.error('Please enter a URL');
+  const updateOption = (key, value) => {
+    setOptions((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const normalizedUrl = url.trim();
+    if (!normalizedUrl) {
+      toast.error("Please enter a URL");
       return;
     }
 
-    // Validate URL format
     try {
-      new URL(url);
+      new URL(normalizedUrl);
     } catch {
-      toast.error('Please enter a valid URL (include http:// or https://)');
+      toast.error("Please enter a valid URL including http:// or https://");
       return;
     }
 
     setLoading(true);
 
     try {
+      const expiresIn = Number.parseInt(options.expiresIn, 10);
       const payload = {
-        originalUrl: url,
-        ...(advancedOptions.customAlias && { customAlias: advancedOptions.customAlias }),
-        ...(advancedOptions.title && { title: advancedOptions.title }),
-        ...(advancedOptions.description && { description: advancedOptions.description }),
-        ...(advancedOptions.password && { password: advancedOptions.password }),
-        ...(advancedOptions.expiresIn && { expiresIn: parseInt(advancedOptions.expiresIn) }),
-        ...(advancedOptions.maxClicks && { maxClicks: parseInt(advancedOptions.maxClicks) }),
-        ...(advancedOptions.tags && { tags: advancedOptions.tags.split(',').map(t => t.trim()) })
+        originalUrl: normalizedUrl,
+        ...(options.customAlias.trim() && {
+          customAlias: options.customAlias.trim(),
+        }),
+        ...(options.password.trim() && { password: options.password.trim() }),
+        ...(Number.isFinite(expiresIn) && expiresIn > 0 && { expiresIn }),
       };
 
-      const response = await api.post('/short_url/create', payload);
-      
-      toast.success('Short URL created successfully!');
-      onSuccess(response.data.data);
-      
-      // Reset form
-      setUrl('');
-      setAdvancedOptions({
-        customAlias: '',
-        title: '',
-        description: '',
-        password: '',
-        expiresIn: '',
-        maxClicks: '',
-        tags: ''
-      });
+      const response = await api.post("/short_url/create", payload);
+      toast.success("Short URL created");
+      onSuccess?.(response.data.data);
+
+      setUrl("");
+      setOptions({ customAlias: "", password: "", expiresIn: "" });
       setShowAdvanced(false);
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to create short URL';
-      toast.error(message);
+      if (!error.response) {
+        const apiUrl =
+          import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        toast.error(
+          `Cannot reach backend at ${apiUrl}. Start backend and verify it is running.`,
+        );
+      } else if (error.response.status === 503) {
+        toast.error(
+          error.response.data?.message ||
+            "Database is unavailable. Check backend MongoDB connection.",
+        );
+      } else {
+        toast.error(
+          error.response?.data?.message || "Failed to create short URL",
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="surface p-8">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Main URL Input */}
-        <div>
-          <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-            Enter your long URL
-          </label>
+    <div className="surface-card p-5 sm:p-7">
+      <div className="mb-5">
+        <h2 className="text-3xl font-bold">Create a short link</h2>
+        <p className="mt-2 text-sm text-muted">
+          Paste your destination URL and publish a clean, trackable link.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <label className="block">
+          <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+            Destination URL
+          </span>
           <div className="relative">
-            <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 text-[color:var(--muted)] w-5 h-5" />
+            <Link2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="url"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com/very-long-url"
-              className="w-full pl-12 pr-4 py-4 border-2 border-[color:var(--border)] rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none transition-all text-lg bg-white/90"
+              onChange={(event) => setUrl(event.target.value)}
+              placeholder="https://example.com/products/winter-launch"
+              className="field pl-9"
               required
             />
           </div>
-        </div>
+        </label>
 
-        {/* Advanced Options Toggle */}
         <button
           type="button"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-emerald-700 hover:text-emerald-800 font-medium transition-colors"
+          onClick={() => setShowAdvanced((prev) => !prev)}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[#0e6e86]"
         >
-          <Settings className="w-5 h-5" />
-          Advanced Options
-          <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+          <Settings2 className="h-4 w-4" />
+          Advanced options
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+          />
         </button>
 
-        {/* Advanced Options */}
         {showAdvanced && (
-          <div className="grid md:grid-cols-2 gap-4 p-6 bg-[color:var(--surface-alt)] rounded-xl border border-[color:var(--border)]">
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                <Hash className="w-4 h-4 inline mr-1" />
+          <div className="animate-rise grid gap-3 rounded-2xl border border-[#ded3bf] bg-[#fffaf0]/90 p-4 sm:grid-cols-3">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <Type className="h-3.5 w-3.5 text-[#0f8f84]" />
                 Custom Alias
-              </label>
+              </span>
               <input
                 type="text"
-                value={advancedOptions.customAlias}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, customAlias: e.target.value})}
-                placeholder="my-custom-link"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
+                value={options.customAlias}
+                onChange={(event) => updateOption("customAlias", event.target.value)}
+                placeholder="spring-sale"
+                className="field"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                value={advancedOptions.title}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, title: e.target.value})}
-                placeholder="Link title"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                Description
-              </label>
-              <input
-                type="text"
-                value={advancedOptions.description}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, description: e.target.value})}
-                placeholder="Optional description"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                <Lock className="w-4 h-4 inline mr-1" />
-                Password Protection
-              </label>
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <Lock className="h-3.5 w-3.5 text-[#0f8f84]" />
+                Password
+              </span>
               <input
                 type="password"
-                value={advancedOptions.password}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, password: e.target.value})}
-                placeholder="Optional password"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
+                value={options.password}
+                onChange={(event) => updateOption("password", event.target.value)}
+                placeholder="Optional"
+                className="field"
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                <Calendar className="w-4 h-4 inline mr-1" />
-                Expires in (days)
-              </label>
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <Calendar className="h-3.5 w-3.5 text-[#0f8f84]" />
+                Expires in days
+              </span>
               <input
                 type="number"
-                value={advancedOptions.expiresIn}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, expiresIn: e.target.value})}
+                min="1"
+                value={options.expiresIn}
+                onChange={(event) => updateOption("expiresIn", event.target.value)}
                 placeholder="7"
-                min="1"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
+                className="field"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                Max Clicks
-              </label>
-              <input
-                type="number"
-                value={advancedOptions.maxClicks}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, maxClicks: e.target.value})}
-                placeholder="1000"
-                min="1"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-[color:var(--muted)] mb-2">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                value={advancedOptions.tags}
-                onChange={(e) => setAdvancedOptions({...advancedOptions, tags: e.target.value})}
-                placeholder="marketing, campaign"
-                className="w-full px-4 py-2 border border-[color:var(--border)] rounded-lg focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none bg-white/90"
-              />
-            </div>
+            </label>
           </div>
         )}
 
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-emerald-600 text-white py-4 rounded-xl font-semibold hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
+          className="btn-primary flex w-full items-center justify-center gap-2 text-base"
         >
           {loading ? (
             <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Creating...
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Creating link
             </>
           ) : (
             <>
-              <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <Sparkles className="h-4 w-4" />
               Shorten URL
             </>
           )}
         </button>
+
+        <p className="text-center text-xs font-medium uppercase tracking-[0.11em] text-slate-500">
+          Free to use | Instant results | No card required
+        </p>
       </form>
     </div>
   );

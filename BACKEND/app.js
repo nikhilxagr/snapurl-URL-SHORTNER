@@ -13,79 +13,101 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import mongoose from "mongoose";
 
 dotenv.config();
 
-console.log("🔧 Environment Check:");
-console.log(
-  "MONGODB_URI:",
-  process.env.MONGODB_URI ? "✅ Loaded" : "❌ Missing",
-);
-console.log("APP_URL:", process.env.APP_URL);
-console.log("JWT_SECRET:", process.env.JWT_SECRET ? "✅ Loaded" : "❌ Missing");
+if (!process.env.MONGODB_URI && process.env.MONGO_URI) {
+  process.env.MONGODB_URI = process.env.MONGO_URI;
+}
+
+if (process.env.NODE_ENV !== "production") {
+  console.log("Environment Check:");
+  console.log("MONGODB_URI:", process.env.MONGODB_URI ? "Loaded" : "Missing");
+  console.log("APP_URL:", process.env.APP_URL);
+  console.log("JWT_SECRET:", process.env.JWT_SECRET ? "Loaded" : "Missing");
+}
 
 const app = express();
 
-// Security middleware
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 
-// CORS configuration
+const allowedOrigins = (
+  process.env.FRONTEND_URLS ||
+  process.env.FRONTEND_URL ||
+  "http://localhost:5173"
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   }),
 );
 
-// Request logging
 app.use(morgan("dev"));
 
-// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again later.",
 });
 
 const createLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 20, // limit each IP to 20 URL creations per hour
+  windowMs: 60 * 60 * 1000,
+  max: 20,
   message: "Too many URLs created, please try again later.",
 });
 
 app.use("/api/", limiter);
 
-// Body parsing middleware
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Attach user middleware
+const isDatabaseReady = () => mongoose.connection.readyState === 1;
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Server is running",
+    database: isDatabaseReady() ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.use("/api", (req, res, next) => {
+  if (req.path === "/health") return next();
+  if (isDatabaseReady()) return next();
+
+  return res.status(503).json({
+    status: "error",
+    message:
+      "Database is unavailable. Check MongoDB connection (Atlas IP whitelist) and try again.",
+  });
+});
+
 app.use(attachUser);
 
-// Routes
 app.use("/api/short_url", createLimiter, shortUrlRoutes);
 app.use("/api/users", user_routes);
 app.use("/api/auth", auth_routes);
 app.use("/api/analytics", analytics_routes);
 
-// Health check
-app.get("/api/health", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// Short URL redirect (must be last)
 app.get("/:id", redirectFromShortUrl);
 
-// 404 handler
 app.use("*", (req, res) => {
   res.status(404).json({
     status: "error",
@@ -93,24 +115,49 @@ app.use("*", (req, res) => {
   });
 });
 
-// Error handler
 app.use(errorHandler);
 
-// Initialize database and start server
-const startServer = async () => {
+let isConnectingDatabase = false;
+
+const connectDatabaseWithRetry = async () => {
+  if (isDatabaseReady() || isConnectingDatabase) return;
+
+  if (!process.env.MONGODB_URI) {
+    console.error("Missing MONGODB_URI (or MONGO_URI) in environment.");
+    return;
+  }
+
+  isConnectingDatabase = true;
   try {
     await connectDB();
-    console.log("✅ MongoDB connected successfully");
-
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-    });
+    console.log("MongoDB connected successfully");
   } catch (error) {
-    console.error("❌ Failed to connect to MongoDB:", error.message);
-    process.exit(1);
+    console.error("MongoDB connection failed:", error.message);
+    setTimeout(connectDatabaseWithRetry, 15000);
+  } finally {
+    isConnectingDatabase = false;
   }
+};
+
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB error:", err.message);
+});
+
+mongoose.connection.on("disconnected", () => {
+  if (process.env.NODE_ENV !== "test") {
+    setTimeout(connectDatabaseWithRetry, 5000);
+  }
+});
+
+const startServer = () => {
+  const PORT = process.env.PORT || 3000;
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+  });
+
+  connectDatabaseWithRetry();
 };
 
 startServer();

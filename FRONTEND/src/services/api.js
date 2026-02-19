@@ -8,6 +8,18 @@ const api = axios.create({
   },
 });
 
+const isAuthEndpoint = (url = "") => {
+  return ["/auth/me", "/auth/login", "/auth/register"].some((path) =>
+    url.includes(path),
+  );
+};
+
+const isAuthPage = () => {
+  if (typeof window === "undefined") return false;
+  const path = window.location.pathname;
+  return path === "/login" || path === "/register";
+};
+
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
@@ -25,8 +37,12 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Redirect to login if unauthorized
-      window.location.href = "/login";
+      const requestUrl = error.config?.url || "";
+
+      // Avoid redirect loops for auth probe endpoints.
+      if (!isAuthEndpoint(requestUrl) && !isAuthPage()) {
+        window.location.assign("/login");
+      }
     }
     return Promise.reject(error);
   },

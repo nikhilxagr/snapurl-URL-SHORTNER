@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,81 +8,54 @@ import {
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
-import Navbar from "./components/Navbar";
+import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Analytics from "./pages/Analytics";
 import MyLinks from "./pages/MyLinks";
 import LinkDetails from "./pages/LinkDetails";
-import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen app-shell">
-          <Navbar />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: "#363636",
-                color: "#fff",
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: "#10b981",
-                  secondary: "#fff",
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: "#ef4444",
-                  secondary: "#fff",
-                },
-              },
-            }}
-          />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "#13283f",
+              color: "#f5fbff",
+              border: "1px solid #2b4d66",
+            },
+          }}
+        />
 
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
 
             <Route
-              path="/dashboard"
+              path="dashboard"
               element={
                 <PrivateRoute>
                   <Dashboard />
                 </PrivateRoute>
               }
             />
-
             <Route
-              path="/my-links"
+              path="my-links"
               element={
                 <PrivateRoute>
                   <MyLinks />
                 </PrivateRoute>
               }
             />
-
             <Route
-              path="/analytics"
-              element={
-                <PrivateRoute>
-                  <Analytics />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/link/:id"
+              path="link/:id"
               element={
                 <PrivateRoute>
                   <LinkDetails />
@@ -90,10 +63,9 @@ function App() {
               }
             />
 
-            <Route path="/404" element={<NotFound />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
-          </Routes>
-        </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
       </Router>
     </AuthProvider>
   );

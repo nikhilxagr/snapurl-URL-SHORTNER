@@ -78,7 +78,10 @@ export const createShortUrl = async (req, res, next) => {
     await shortUrl.save();
 
     // Generate QR code
-    const baseUrl = process.env.APP_URL || "http://localhost:3000";
+    const baseUrl = (process.env.APP_URL || "http://localhost:3000").replace(
+      /\/+$/,
+      "",
+    );
     const shortLink = `${baseUrl}/${shortUrl.customAlias || shortUrl.shortId}`;
     const qrCodeDataUrl = await QRCode.toDataURL(shortLink);
     shortUrl.qrCode = qrCodeDataUrl;
