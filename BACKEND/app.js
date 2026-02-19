@@ -30,7 +30,7 @@ if (process.env.NODE_ENV !== "production") {
 
 const app = express();
 
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
 
 app.use(
   helmet({
@@ -71,8 +71,12 @@ app.use(morgan("dev"));
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: Number(process.env.RATE_LIMIT_MAX || 300),
   message: "Too many requests from this IP, please try again later.",
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Keep Render health checks out of the global limiter.
+  skip: (req) => req.path === "/health",
 });
 
 const createLimiter = rateLimit({
@@ -81,7 +85,7 @@ const createLimiter = rateLimit({
   message: "Too many URLs created, please try again later.",
 });
 
-app.use("/api/", limiter);
+app.use("/api", limiter);
 
 app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
